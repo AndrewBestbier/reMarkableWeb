@@ -20,6 +20,7 @@ import { proxy, useSnapshot } from "valtio";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import classNames from "classnames";
+import { saveAs } from "file-saver";
 import { RegisterDeviceModal } from "../components/register-modal";
 
 const store = proxy<{
@@ -202,6 +203,29 @@ const Highlights = ({ highlights }: any) => {
           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
         >
           Download CSV
+        </button>
+        <button
+          onClick={() => {
+            const content = highlights
+              .map((page: any, index: number) => {
+                if (!page.length) {
+                  return null;
+                }
+                return [`## Page ${index + 1}`]
+                  .concat(page.map((highlight: any) => highlight.text))
+                  .join("\n\n");
+              })
+              .filter((item: any) => item)
+              .join("\n\n");
+            const blob = new Blob([`# ${examinedFileTitle} \n${content}`], {
+              type: "text/plain;charset=utf-8",
+            });
+            saveAs(blob, `${examinedFileTitle}.md`);
+          }}
+          type="button"
+          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+        >
+          Download Markdown
         </button>
       </div>
       {highlights.map((page: any, index: any) => {

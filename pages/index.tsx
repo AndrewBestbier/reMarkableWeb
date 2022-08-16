@@ -204,8 +204,8 @@ const Highlights = ({ highlights }: any) => {
           Download CSV
         </button>
       </div>
-      {highlights?.map((page: any, index: any) => {
-        return (
+      {highlights.map((page: any, index: any) => {
+        return page.length ? (
           <div key={index} className="pb-10">
             <h1 className="text-xl font-remarkable">Page {index + 1}</h1>
             <div className="mt-4">
@@ -237,7 +237,7 @@ const Highlights = ({ highlights }: any) => {
               })}
             </div>
           </div>
-        );
+        ) : null;
       })}
     </div>
   );

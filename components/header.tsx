@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export const Header = () => {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
@@ -11,9 +12,9 @@ export const Header = () => {
     <header className="flex px-6 pt-5 pb-4 bg-white border-b border-gray-200 items-center justify-between">
       <div className="flex justify-center items-center gap-x-20">
         <h1 className="font-remarkable text-3xl font-bold">reMarkable Web</h1>
-        <a href="/manual" className="hover:text-blue-500">
-          Manual upload
-        </a>
+        <Link href="/manual">
+          <a className="hover:text-blue-500">Manual upload</a>
+        </Link>
       </div>
       <div className="flex justify-center items-center gap-x-10">
         <a

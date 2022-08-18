@@ -1,6 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { Formik } from "formik";
+import Link from "next/link";
 
 import * as Yup from "yup";
 import { useMutation } from "@tanstack/react-query";
@@ -120,9 +121,11 @@ export const RegisterDeviceModal = ({
                             </p>
                           </div>
                           <div className="flex items-center justify-between">
-                            <a href="/manual" className="text-blue-500">
-                              If you wish to upload a PDF manually, click here
-                            </a>
+                            <Link href="/manual">
+                              <a className="text-blue-500">
+                                If you wish to upload a PDF manually, click here
+                              </a>
+                            </Link>
                             <button
                               type="submit"
                               className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"

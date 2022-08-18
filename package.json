@@ -21,6 +21,7 @@
     "next": "12.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-dropzone": "^14.2.2",
     "react-icons": "^4.4.0",
     "react-query": "^4.0.0",
     "remarkable-typescript": "^1.1.3",

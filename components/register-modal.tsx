@@ -119,12 +119,17 @@ export const RegisterDeviceModal = ({
                               {errors.code}
                             </p>
                           </div>
-                          <button
-                            type="submit"
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                          >
-                            {isLoading ? "Submitting" : "Submit"}
-                          </button>
+                          <div className="flex items-center justify-between">
+                            <a href="/manual" className="text-blue-500">
+                              If you wish to upload a PDF manually, click here
+                            </a>
+                            <button
+                              type="submit"
+                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                            >
+                              {isLoading ? "Submitting" : "Submit"}
+                            </button>
+                          </div>
                         </form>
                       )}
                     </Formik>

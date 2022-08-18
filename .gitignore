@@ -9,6 +9,7 @@
 /coverage
 
 # next.js
+.venv
 /.next/
 /out/
 

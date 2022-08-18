@@ -65,9 +65,8 @@ class handler(BaseHTTPRequestHandler):
 
                 if (path["items"][0][0] == "l"):
                     rect = path["rect"]
-                    if (needle != ''):
-                        image = page.get_pixmap(matrix=fitz.Identity, clip=rect, annots=False)
-                        page_images.append(base64.b64encode(image.tobytes(output='png')).decode('utf_8'))
+                    image = page.get_pixmap(matrix=fitz.Identity, clip=rect, annots=False)
+                    page_images.append(base64.b64encode(image.tobytes(output='png')).decode('utf_8'))
 
             grouped_annotations = []
             next_location = -1

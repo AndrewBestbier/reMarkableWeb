@@ -458,7 +458,6 @@ const Sidebar = ({ files }: { files: File[] }) => {
   );
 
   const searchResults = fuse.search(searchText);
-  console.log("a", searchResults);
   const fileTree = createDataTree(files);
 
   const onSearch = (event: ChangeEvent<HTMLInputElement>) => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Header } from "../components/header";
 import { AiFillFolder, AiFillFile, AiOutlineFolder } from "react-icons/ai";
 import { HiOutlineChevronRight, HiOutlineChevronDown } from "react-icons/hi";
@@ -8,6 +8,7 @@ import axios from "axios";
 import classNames from "classnames";
 import { saveAs } from "file-saver";
 import { RegisterDeviceModal } from "../components/register-modal";
+import Fuse from "fuse.js";
 
 type File = {
   id: string;
@@ -24,16 +25,22 @@ type File = {
 
 const store = proxy<{
   examinedFileHash: string;
+  searchText: string;
   refreshToken: string;
   examinedFileTitle: string;
 }>({
   examinedFileHash: "",
+  searchText: "",
   examinedFileTitle: "",
   refreshToken: "",
 });
 
 const setExaminedFileHash = (fileHash: string) => {
   store.examinedFileHash = fileHash;
+};
+
+const setSearchText = (searchText: string) => {
+  store.searchText = searchText;
 };
 
 const setExaminedFileTitle = (fileTitle: string) => {
@@ -119,7 +126,7 @@ const Index = () => {
       );
       return response.data.refreshToken;
     },
-    { enabled: !!deviceToken, staleTime: Infinity }
+    { enabled: !!deviceToken && true, staleTime: Infinity }
   );
 
   useEffect(() => {
@@ -219,8 +226,6 @@ const Index = () => {
 
   const files = (filteredFiles || []).concat(missingUpdatesQuery?.data || []);
 
-  const fileTree = createDataTree(files);
-
   return (
     <>
       <Header />
@@ -232,7 +237,7 @@ const Index = () => {
       />
       <div className="grid grid-cols-12 grid-rows-1 grow overflow-hidden">
         <div className="col-span-3 overflow-x-auto overflow-y-auto flex grow">
-          <Sidebar fileTree={fileTree} />
+          <Sidebar files={files} />
         </div>
         <div className="col-span-9 flex grow overscroll-contain overflow-auto">
           <FileView />
@@ -421,7 +426,7 @@ const File = ({ file }: { file: File }) => {
         {file.type === "CollectionType" && !file.childNodes.length ? (
           <AiOutlineFolder className="min-w-fit ml-6" />
         ) : null}
-        {file.type === "DocumentType" && !file.childNodes.length ? (
+        {file.type === "DocumentType" && !file.childNodes?.length ? (
           <AiFillFile className="min-w-fit ml-6" />
         ) : null}
         {file.visibleName}
@@ -440,18 +445,45 @@ const File = ({ file }: { file: File }) => {
   );
 };
 
-const Sidebar = ({ fileTree }: { fileTree: File[] }) => {
+const Sidebar = ({ files }: { files: File[] }) => {
+  const { searchText } = useSnapshot(store);
+
+  const fuse = new Fuse(
+    files.filter((file) => file.type === "DocumentType"),
+    {
+      keys: ["visibleName"],
+      includeScore: true,
+      threshold: 0.4,
+    }
+  );
+
+  const searchResults = fuse.search(searchText);
+  const fileTree = createDataTree(files);
+
+  const onSearch = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchText(event.target.value);
+  };
+
   return (
     <div className="py-4 px-6 border-r whitespace-nowrap overflow-auto grow">
-      {fileTree
-        .sort(
-          (a, b) =>
-            a.type.localeCompare(b.type) ||
-            a.visibleName.localeCompare(b.visibleName)
-        )
-        .map((file) => (
-          <File file={file} key={file.id} />
-        ))}
+      <input
+        type="text"
+        className="w-full mb-4 appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        value={searchText}
+        placeholder="Search"
+        onChange={onSearch}
+      />
+      {!searchText
+        ? fileTree
+            .sort(
+              (a, b) =>
+                a.type.localeCompare(b.type) ||
+                a.visibleName.localeCompare(b.visibleName)
+            )
+            .map((file) => <File file={file} key={file.id} />)
+        : searchResults.map((result) => (
+            <File file={result.item} key={result.item.id} />
+          ))}
     </div>
   );
 };

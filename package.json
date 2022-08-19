@@ -16,6 +16,7 @@
     "extract-zip": "^2.0.1",
     "file-saver": "^2.0.5",
     "formik": "^2.2.9",
+    "fuse.js": "^6.6.2",
     "glob": "^8.0.3",
     "list-to-tree": "^2.2.5",
     "next": "12.2.4",

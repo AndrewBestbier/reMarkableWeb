@@ -1,7 +1,13 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../components/header";
 import { AiFillFolder, AiFillFile, AiOutlineFolder } from "react-icons/ai";
 import { HiOutlineChevronRight, HiOutlineChevronDown } from "react-icons/hi";
+import { proxy, useSnapshot } from "valtio";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import classNames from "classnames";
+import { saveAs } from "file-saver";
+import { RegisterDeviceModal } from "../components/register-modal";
 
 type File = {
   id: string;
@@ -15,13 +21,6 @@ type File = {
   lastOpened: string;
   childNodes: File[];
 };
-
-import { proxy, useSnapshot } from "valtio";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import classNames from "classnames";
-import { saveAs } from "file-saver";
-import { RegisterDeviceModal } from "../components/register-modal";
 
 const store = proxy<{
   examinedFileHash: string;
@@ -64,12 +63,9 @@ const createDataTree = (dataset: File[]) => {
 };
 
 function downloadBlob(content: any, filename: any, contentType: any) {
-  // Create a blob
-  var blob = new Blob([content], { type: contentType });
-  var url = URL.createObjectURL(blob);
-
-  // Create a link to download it
-  var pom = document.createElement("a");
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const pom = document.createElement("a");
   pom.href = url;
   pom.setAttribute("download", filename);
   pom.click();
@@ -90,6 +86,13 @@ function arrayToCsv(data: any) {
 
 const Index = () => {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
+  const [missingUpdates, setMissingUpdates] = useState<
+    {
+      id: string;
+      hash: string;
+    }[]
+  >([]);
+  const [filteredFiles, setFilteredFiles] = useState<File[]>([]);
 
   const { refreshToken } = useSnapshot(store);
 
@@ -133,10 +136,90 @@ const Index = () => {
       });
       return response.data.files;
     },
-    { enabled: !!refreshToken, staleTime: Infinity }
+    { enabled: !!refreshToken }
   );
 
-  const fileTree = createDataTree(filesQuery.data || []);
+  const updatesQuery = useQuery(
+    ["updates", refreshToken],
+    async () => {
+      const response = await axios.get("/api/updates", {
+        headers: {
+          Authorization: `Bearer ${refreshToken}`,
+        },
+      });
+      return response.data;
+    },
+    { enabled: !!refreshToken && !!filesQuery.data }
+  );
+
+  useEffect(() => {
+    const updates = updatesQuery.data;
+    const parsedUpdates: { id: string; hash: string }[] =
+      updates?.map((file: string) => {
+        const id = file.split(":")[2];
+        const hash = file.split(":")[0];
+        return { id, hash };
+      }) || [];
+
+    const updatesMap = parsedUpdates.reduce<{ [index: string]: string }>(
+      (acc, { id, hash }) => {
+        acc[id] = hash;
+        acc[hash] = id;
+        return acc;
+      },
+      {}
+    );
+
+    const files: File[] = filesQuery.data || [];
+    const filesMap =
+      files?.reduce<{ [index: string]: string }>((acc, file: File) => {
+        acc[file.hash] = file.id;
+        acc[file.id] = file.hash;
+        return acc;
+      }, {}) || [];
+
+    const filteredFiles =
+      files?.filter((file: File) => {
+        if (
+          updatesMap[file.id] === undefined ||
+          updatesMap[file.id] !== file.hash
+        ) {
+          return false;
+        }
+        return true;
+      }) || [];
+
+    setFilteredFiles(filteredFiles);
+
+    const missing =
+      parsedUpdates?.filter(({ id, hash }: any) => {
+        return !filesMap[id] || !filesMap[hash];
+      }) || [];
+
+    setMissingUpdates(missing);
+  }, [filesQuery.data, updatesQuery.data]);
+
+  const missingUpdatesQuery = useQuery(
+    ["updates", missingUpdates],
+    async () => {
+      const response = await axios.get(
+        `/api/missing?fileHashes=${missingUpdates
+          .map((update) => update.hash)
+          .join(",")}`,
+        {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        }
+      );
+      return response.data.files;
+    },
+    { enabled: !!missingUpdates.length && !!refreshToken }
+  );
+
+  const files = (filteredFiles || []).concat(missingUpdatesQuery?.data || []);
+
+  const fileTree = createDataTree(files);
 
   return (
     <>
@@ -171,7 +254,7 @@ const Highlights = ({ highlights }: any) => {
           onClick={() => {
             const csvHighlights = highlights
               .map((page: any, index: any) => {
-                return page.map(({ text, color }: any) => [
+                return page.map(({ text }: any) => [
                   text,
                   examinedFileTitle,
                   "",

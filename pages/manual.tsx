@@ -30,6 +30,7 @@ const Dropzone = () => {
     useDropzone({
       onDrop,
       maxFiles: 1,
+      maxSize: 4 * 1000000,
       accept: { "application/pdf": [".pdf"] },
     });
 
@@ -46,9 +47,12 @@ const Dropzone = () => {
           Drop the file here ...
         </p>
       ) : (
-        <p className="font-remarkable text-3xl">
-          Drop your PDF downloaded from ReMarkable here
-        </p>
+        <div className="flex flex-col items-center justify-center gap-y-10">
+          <p className="font-remarkable text-3xl">
+            Drop your PDF downloaded from ReMarkable here
+          </p>
+          <p className="font-remarkable text-xl">Max size: 4MB</p>
+        </div>
       )}
     </div>
   ) : (

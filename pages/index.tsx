@@ -487,11 +487,20 @@ const FileView = () => {
 };
 
 const File = ({ file }: { file: File }) => {
+  const { examinedFileHash } = useSnapshot(store);
   const [expanded, setExpanded] = useState(false);
+
   return (
     <div key={file.id}>
       <div
-        className="flex flex-nowrap items-center gap-x-2 cursor-pointer"
+        className={classNames(
+          "flex flex-nowrap items-center gap-x-2 cursor-pointer ",
+          {
+            "transition ease-in-out duration-100 hover:bg-gray-100":
+              examinedFileHash !== file.hash,
+            "bg-sky-100": examinedFileHash === file.hash,
+          }
+        )}
         onClick={() => {
           if (file.type === "CollectionType" && file.childNodes.length) {
             setExpanded((state) => !state);

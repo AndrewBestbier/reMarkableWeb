@@ -528,7 +528,15 @@ const File = ({ file }: { file: File }) => {
         {file.type === "DocumentType" && !file.childNodes?.length ? (
           <AiFillFile className="min-w-fit ml-6" />
         ) : null}
-        {file.visibleName}
+        <div
+          className={classNames({
+            "transition ease-in-out duration-100 hover:bg-gray-100":
+              examinedFileHash !== file.hash,
+            "bg-sky-100": examinedFileHash === file.hash,
+          })}
+        >
+          {file.visibleName}
+        </div>
       </div>
       <div className="flex flex-col ml-6">
         {expanded &&

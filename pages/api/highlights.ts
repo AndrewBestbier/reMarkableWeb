@@ -83,8 +83,10 @@ export default async (
             if (
               previousElement &&
               previousElement.color === highlight.color &&
-              previousElement.start + previousElement.length + 2 ===
-                highlight.start
+              (previousElement.start + previousElement.length + 2 ===
+                highlight.start ||
+                previousElement.start + previousElement.length + 3 ===
+                  highlight.start)
             ) {
               const previousEntry = acc[acc.length - 1];
               return [

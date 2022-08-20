@@ -69,14 +69,14 @@ export const RegisterDeviceModal = ({
                     <p className="text-sm text-gray-500">
                       For ReMarkable Web to talk to ReMarkable&apos;s API, a new
                       device has to be registered through an 8 letter code.
-                      Please generate a code{" "}
+                      Please generate a code at {" "}
                       <a
-                        className="underline text-blue-600"
+                        className="underline text-blue-600 cursor-pointer"
                         href="https://my.remarkable.com/device/desktop/connect"
                         target="_blank"
                         rel="noreferrer"
                       >
-                        here
+                        https://my.remarkable.com/device/desktop/connect
                       </a>{" "}
                       and then enter it below.
                     </p>

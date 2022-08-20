@@ -3,14 +3,12 @@ import { Header } from "../components/header";
 import { AiFillFolder, AiFillFile, AiOutlineFolder } from "react-icons/ai";
 import { HiOutlineChevronRight, HiOutlineChevronDown } from "react-icons/hi";
 import { proxy, useSnapshot } from "valtio";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import classNames from "classnames";
-import { saveAs } from "file-saver";
 import { RegisterDeviceModal } from "../components/register-modal";
 import Fuse from "fuse.js";
-import { ReadwiseModal } from "../components/readwise-modal";
-import toast from "react-hot-toast";
+import { Highlights } from "../components/highlights";
 
 type File = {
   id: string;
@@ -25,7 +23,7 @@ type File = {
   childNodes: File[];
 };
 
-const store = proxy<{
+export const store = proxy<{
   examinedFileHash: string;
   searchText: string;
   refreshToken: string;
@@ -71,27 +69,10 @@ const createDataTree = (dataset: File[]) => {
   return dataTree;
 };
 
-function downloadBlob(content: any, filename: any, contentType: any) {
-  const blob = new Blob([content], { type: contentType });
-  const url = URL.createObjectURL(blob);
-  const pom = document.createElement("a");
-  pom.href = url;
-  pom.setAttribute("download", filename);
-  pom.click();
-}
-
-function arrayToCsv(data: any) {
-  return data
-    .map(
-      (row: any) =>
-        row
-          .map(String) // convert every value to String
-          .map((v: any) => v.replaceAll('"', '""')) // escape double colons
-          .map((v: any) => `"${v}"`) // quote it
-          .join(",") // comma-separated
-    )
-    .join("\r\n"); // rows starting on new lines
-}
+export type Highlight = {
+  text: string;
+  color: number;
+};
 
 const Index = () => {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
@@ -128,7 +109,7 @@ const Index = () => {
       );
       return response.data.refreshToken;
     },
-    { enabled: !!deviceToken && true, staleTime: Infinity }
+    { enabled: !!deviceToken, staleTime: Infinity }
   );
 
   useEffect(() => {
@@ -244,202 +225,6 @@ const Index = () => {
         <div className="col-span-9 flex grow overscroll-contain overflow-auto">
           <FileView />
         </div>
-      </div>
-    </>
-  );
-};
-
-type ReadwiseHighlight = {
-  text: string;
-  title: string;
-  location: number;
-  location_type: string;
-};
-
-export const exportToReadwise = async (highlights: ReadwiseHighlight[]) => {
-  return axios.post(
-    "https://readwise.io/api/v2/highlights/",
-    {
-      highlights,
-    },
-    {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("readwiseToken")}`,
-      },
-    }
-  );
-};
-
-const Highlights = ({ highlights }: any) => {
-  const { examinedFileTitle } = useSnapshot(store);
-  const [showReadwiseModal, setShowReadwiseModal] = useState(false);
-  const [readwiseToken, setReadwiseToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setReadwiseToken(localStorage.getItem("readwiseToken"));
-  }, []);
-
-  const { mutate, isLoading } = useMutation(exportToReadwise, {
-    onSuccess: (response) => {
-      toast.success("Highlights exported to Readwise successfully");
-    },
-    onError: () => {
-      toast.error("There was an error exporting your highlights");
-    },
-  });
-
-  return (
-    <>
-      <ReadwiseModal
-        isOpen={showReadwiseModal}
-        setReadwiseToken={(token: string) => {
-          localStorage.setItem("readwiseToken", token);
-          setShowReadwiseModal(false);
-          setReadwiseToken(token);
-          toast.success(
-            "Readwise Token saved. You can now export your highlights."
-          );
-        }}
-      />
-      <div className="w-full p-10">
-        <h1 className="text-center font-remarkable text-2xl">
-          {examinedFileTitle}
-        </h1>
-        <div className="flex items-center w-full gap-x-10 mb-5 mt-5">
-          {!readwiseToken ? (
-            <button
-              onClick={() => {
-                const readwiseToken = localStorage.getItem("readwiseToken");
-
-                if (!readwiseToken) {
-                  setShowReadwiseModal(true);
-                }
-              }}
-              type="button"
-              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-            >
-              Configure Readwise
-            </button>
-          ) : null}
-          {readwiseToken ? (
-            <button
-              onClick={() => {
-                const readwiseHighlights: ReadwiseHighlight[] = highlights
-                  .map((page: any, index: any) => {
-                    return page.map(({ text }: { text: string }) => {
-                      return {
-                        text,
-                        title: examinedFileTitle,
-                        location: index + 1,
-                        location_type: "page",
-                      };
-                    });
-                  })
-                  .flat();
-                mutate(readwiseHighlights);
-              }}
-              type="button"
-              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-            >
-              {!isLoading ? "Export to Readwise" : "Exporting"}
-            </button>
-          ) : null}
-          <button
-            onClick={() => {
-              const csvHighlights = highlights
-                .map((page: any, index: any) => {
-                  return page.map(({ text }: any) => [
-                    text,
-                    examinedFileTitle,
-                    "",
-                    "",
-                    "",
-                    index + 1,
-                    new Date(),
-                  ]);
-                })
-                .flat();
-
-              const rows = [
-                [
-                  "Highlight",
-                  "Title",
-                  "Author",
-                  "URL",
-                  "Note",
-                  "Location",
-                  "Date",
-                ],
-              ]
-                .concat(csvHighlights)
-                .filter((item) => item.length);
-              const csvContent = arrayToCsv(rows);
-              downloadBlob(csvContent, "export.csv", "text/csv;charset=utf-8;");
-            }}
-            type="button"
-            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-          >
-            Download CSV
-          </button>
-          <button
-            onClick={() => {
-              const content = highlights
-                .map((page: any, index: number) => {
-                  if (!page.length) {
-                    return null;
-                  }
-                  return [`## Page ${index + 1}`]
-                    .concat(page.map((highlight: any) => highlight.text))
-                    .join("\n\n");
-                })
-                .filter((item: any) => item)
-                .join("\n\n");
-              const blob = new Blob([`# ${examinedFileTitle} \n${content}`], {
-                type: "text/plain;charset=utf-8",
-              });
-              saveAs(blob, `${examinedFileTitle}.md`);
-            }}
-            type="button"
-            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-          >
-            Download Markdown
-          </button>
-        </div>
-        {highlights.map((page: any, index: any) => {
-          return page.length ? (
-            <div key={index} className="pb-10">
-              <h1 className="text-xl font-remarkable">Page {index + 1}</h1>
-              <div className="mt-4">
-                {page.map((highlight: any) => {
-                  return (
-                    <div
-                      key={highlight.text}
-                      className="flex gap-x-6 gap-y-4 mb-6"
-                    >
-                      <div>
-                        <div
-                          className={classNames("rounded", {
-                            "bg-yellow-500": highlight.color === 3,
-                            "bg-green-500": highlight.color === 4,
-                            "bg-fuchsia-500": highlight.color === 5,
-                            "bg-gray-600": highlight.color === 8,
-                          })}
-                          style={{
-                            width: 20,
-                            maxWidth: 20,
-                            height: 20,
-                            maxHeight: 20,
-                          }}
-                        />
-                      </div>
-                      <p className="text-md text-gray-700">{highlight.text}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null;
-        })}
       </div>
     </>
   );

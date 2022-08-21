@@ -58,11 +58,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
   const [showReadwiseModal, setShowReadwiseModal] = useState(false);
   const [readwiseToken, setReadwiseToken] = useState<string | null>(null);
 
-  const [checkedKeys, setCheckedKeys] = useState(
-    highlights
-      .map((page, index) => (page.length ? `Page ${index + 1}` : null))
-      .filter((item) => !!item)
-  );
+  const [checkedKeys, setCheckedKeys] = useState([]);
   const [checkedHighlights, setCheckedHighlights] = useState([]);
 
   const onCheck = (checkedKeysValue: string[], e: any) => {
@@ -144,8 +140,18 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                   );
                 mutate(readwiseHighlights);
               }}
+              disabled={!checkedHighlights.length}
               type="button"
-              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+              className={classNames(
+                "inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500",
+                {
+                  "bg-slate-400 cursor-not-allowed": !checkedHighlights.length,
+                },
+                {
+                  "bg-slate-600 hover:bg-slate-700 cursor-pointer":
+                    !!checkedHighlights.length,
+                }
+              )}
             >
               {!isLoading ? "Export to Readwise" : "Exporting"}
             </button>
@@ -177,7 +183,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                   "Date",
                 ],
               ]
-                  // @ts-ignore
+                // @ts-ignore
                 .concat(csvHighlights)
                 .filter((item) => item.length);
               const csvContent = arrayToCsv(rows);
@@ -221,46 +227,52 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
           //@ts-ignore
           onCheck={onCheck}
         >
-          {highlights.map((page, index) => {
-            return page.length ? (
-              <Tree.TreeNode
-                title={`Page ${index + 1}`}
-                key={`Page ${index + 1}`}
-                className="text-slate-800 font-bold mt-10"
-              >
-                {page.map((highlight) => {
-                  return (
-                    <Tree.TreeNode
-                      title={highlight.text}
-                      key={highlight.text}
-                      className="my-2"
-                      // @ts-ignore
-                      data={{ location: index + 1 }}
-                      icon={
-                        <div>
-                          <div
-                            className={classNames("rounded", {
-                              "bg-yellow-500": highlight.color === 3,
-                              "bg-green-500": highlight.color === 4,
-                              "bg-fuchsia-500": highlight.color === 5,
-                              "bg-gray-600": highlight.color === 8,
-                            })}
-                            style={{
-                              width: 24,
-                              maxWidth: 24,
-                              height: 24,
-                              maxHeight: 24,
-                              marginRight: 20,
-                            }}
-                          />
-                        </div>
-                      }
-                    />
-                  );
-                })}
-              </Tree.TreeNode>
-            ) : null;
-          })}
+          <Tree.TreeNode
+            title={examinedFileTitle}
+            key={"root"}
+            className="text-slate-800 font-bold mt-10"
+          >
+            {highlights.map((page, index) => {
+              return page.length ? (
+                <Tree.TreeNode
+                  title={`Page ${index + 1}`}
+                  key={`Page ${index + 1}`}
+                  className="text-slate-800 font-bold"
+                >
+                  {page.map((highlight) => {
+                    return (
+                      <Tree.TreeNode
+                        title={highlight.text}
+                        key={highlight.text}
+                        className="my-2"
+                        // @ts-ignore
+                        data={{ location: index + 1 }}
+                        icon={
+                          <div>
+                            <div
+                              className={classNames("rounded", {
+                                "bg-yellow-500": highlight.color === 3,
+                                "bg-green-500": highlight.color === 4,
+                                "bg-fuchsia-500": highlight.color === 5,
+                                "bg-gray-600": highlight.color === 8,
+                              })}
+                              style={{
+                                width: 24,
+                                maxWidth: 24,
+                                height: 24,
+                                maxHeight: 24,
+                                marginRight: 20,
+                              }}
+                            />
+                          </div>
+                        }
+                      />
+                    );
+                  })}
+                </Tree.TreeNode>
+              ) : null;
+            })}
+          </Tree.TreeNode>
         </Tree>
       </div>
     </>

@@ -21,7 +21,7 @@ export const Header = () => {
           href="https://www.buymeacoffee.com/andrewbest"
           className="text-blue-500"
         >
-          Enjoying ReMarkable Web?
+          Enjoying this service? Click here to buy me a coffee
         </a>
         {deviceToken ? (
           <button

@@ -312,18 +312,18 @@ const File = ({ file }: { file: File }) => {
       >
         {file.type === "CollectionType" && file.childNodes.length ? (
           <>
-            {!expanded ? <HiOutlineChevronRight className="min-w-fit" /> : null}
-            {expanded ? <HiOutlineChevronDown className="min-w-fit" /> : null}
+            {!expanded ? <HiOutlineChevronRight /> : null}
+            {expanded ? <HiOutlineChevronDown /> : null}
           </>
         ) : null}
         {file.type === "CollectionType" && file.childNodes.length ? (
-          <AiFillFolder className="min-w-fit" />
+          <AiFillFolder />
         ) : null}
         {file.type === "CollectionType" && !file.childNodes.length ? (
-          <AiOutlineFolder className="min-w-fit ml-6" />
+          <AiOutlineFolder className="ml-6" />
         ) : null}
         {file.type === "DocumentType" && !file.childNodes?.length ? (
-          <AiFillFile className="min-w-fit ml-6" />
+          <AiFillFile className="ml-6" style={{ minWidth: "1rem" }} />
         ) : null}
         <div
           className={classNames({
@@ -395,7 +395,7 @@ const Sidebar = ({ files }: { files: File[] }) => {
       </div>
       <div
         className={classNames(
-          "lg:inline top-44 overflow-auto whitespace-nowrap bottom-0 left-0 right-0 flex-col bg-white h-full py-4 px-6",
+          "lg:inline top-44 overflow-auto whitespace-nowrap bottom-0 left-0 right-0 flex flex-col bg-white h-full py-4 px-6",
           {
             absolute: showSideBar,
             hidden: !showSideBar,

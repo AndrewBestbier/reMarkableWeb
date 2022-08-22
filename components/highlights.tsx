@@ -98,7 +98,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
           );
         }}
       />
-      <div className="w-full p-10">
+      <div className="w-full py-4 px-6 lg:p-10">
         <h1 className="text-center font-remarkable text-2xl">
           {examinedFileTitle}
         </h1>

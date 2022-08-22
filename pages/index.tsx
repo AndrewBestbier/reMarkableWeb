@@ -1,6 +1,11 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { Header } from "../components/header";
-import { AiFillFolder, AiFillFile, AiOutlineFolder } from "react-icons/ai";
+import {
+  AiOutlineMenu,
+  AiFillFolder,
+  AiFillFile,
+  AiOutlineFolder,
+} from "react-icons/ai";
 import { HiOutlineChevronRight, HiOutlineChevronDown } from "react-icons/hi";
 import { proxy, useSnapshot } from "valtio";
 import { useQuery } from "@tanstack/react-query";
@@ -25,11 +30,13 @@ type File = {
 
 export const store = proxy<{
   examinedFileHash: string;
+  showSideBar: boolean;
   searchText: string;
   refreshToken: string;
   examinedFileTitle: string;
 }>({
   examinedFileHash: "",
+  showSideBar: false,
   searchText: "",
   examinedFileTitle: "",
   refreshToken: "",
@@ -41,6 +48,10 @@ const setExaminedFileHash = (fileHash: string) => {
 
 const setSearchText = (searchText: string) => {
   store.searchText = searchText;
+};
+
+const setShowSideBar = (value: boolean) => {
+  store.showSideBar = value;
 };
 
 const setExaminedFileTitle = (fileTitle: string) => {
@@ -218,11 +229,11 @@ const Index = () => {
           registerDeviceToken(deviceToken)
         }
       />
-      <div className="grid grid-cols-12 grid-rows-1 grow overflow-hidden">
-        <div className="col-span-3 overflow-x-auto overflow-y-auto flex grow">
+      <div className="flex flex-col lg:flex-row grow overflow-hidden">
+        <div className="flex lg:w-1/3">
           <Sidebar files={files} />
         </div>
-        <div className="col-span-9 flex grow overscroll-contain overflow-auto">
+        <div className="flex grow overscroll-contain overflow-auto">
           <FileView />
         </div>
       </div>
@@ -253,7 +264,7 @@ const FileView = () => {
   if (!examinedFileHash) {
     return (
       <div className="flex items-center justify-center w-full">
-        <h1 className="font-remarkable text-4xl">
+        <h1 className="font-remarkable text-4xl text-center px-8">
           Select a document to view highlights
         </h1>
       </div>
@@ -262,7 +273,7 @@ const FileView = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center w-full">
+      <div className="flex items-center justify-center w-full text-center px-16">
         <h1 className="font-remarkable text-4xl animate-bounce">Loading</h1>
       </div>
     );
@@ -279,7 +290,7 @@ const File = ({ file }: { file: File }) => {
     <div key={file.id}>
       <div
         className={classNames(
-          "flex flex-nowrap items-center gap-x-2 cursor-pointer ",
+          "flex flex-nowrap items-center gap-x-2 cursor-pointer",
           {
             "transition ease-in-out duration-100 hover:bg-gray-100":
               examinedFileHash !== file.hash,
@@ -294,6 +305,7 @@ const File = ({ file }: { file: File }) => {
           if (file.type === "DocumentType") {
             setExaminedFileHash(file.hash);
             setExaminedFileTitle(file.visibleName);
+            setShowSideBar(false);
             return;
           }
         }}
@@ -338,7 +350,7 @@ const File = ({ file }: { file: File }) => {
 };
 
 const Sidebar = ({ files }: { files: File[] }) => {
-  const { searchText } = useSnapshot(store);
+  const { searchText, showSideBar } = useSnapshot(store);
 
   const fuse = new Fuse(
     files.filter((file) => file.type === "DocumentType"),
@@ -357,25 +369,51 @@ const Sidebar = ({ files }: { files: File[] }) => {
   };
 
   return (
-    <div className="py-4 px-6 border-r whitespace-nowrap overflow-auto grow">
-      <input
-        type="text"
-        className="w-full mb-4 appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        value={searchText}
-        placeholder="Search"
-        onChange={onSearch}
-      />
-      {!searchText
-        ? fileTree
-            .sort(
-              (a, b) =>
-                a.type.localeCompare(b.type) ||
-                a.visibleName.localeCompare(b.visibleName)
-            )
-            .map((file) => <File file={file} key={file.id} />)
-        : searchResults.map((result) => (
-            <File file={result.item} key={result.item.id} />
-          ))}
+    <div className="flex flex-col lg:border-r z-10 w-full">
+      <div
+        className="flex lg:hidden gap-x-6 items-center cursor-pointer py-4 px-6"
+        onClick={() => setShowSideBar(!showSideBar)}
+      >
+        <AiOutlineMenu className="w-6 h-6" />
+        <div className="text-lg font-bold">Files</div>
+      </div>
+      <div
+        className={classNames("w-full lg:inline px-6 lg:pt-6", {
+          inline: showSideBar,
+          hidden: !showSideBar,
+        })}
+      >
+        <input
+          type="text"
+          className={classNames(
+            "w-full appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          )}
+          value={searchText}
+          placeholder="Search"
+          onChange={onSearch}
+        />
+      </div>
+      <div
+        className={classNames(
+          "lg:inline top-44 overflow-auto whitespace-nowrap bottom-0 left-0 right-0 flex-col bg-white h-full py-4 px-6",
+          {
+            absolute: showSideBar,
+            hidden: !showSideBar,
+          }
+        )}
+      >
+        {!searchText
+          ? fileTree
+              .sort(
+                (a, b) =>
+                  a.type.localeCompare(b.type) ||
+                  a.visibleName.localeCompare(b.visibleName)
+              )
+              .map((file) => <File file={file} key={file.id} />)
+          : searchResults.map((result) => (
+              <File file={result.item} key={result.item.id} />
+            ))}
+      </div>
     </div>
   );
 };

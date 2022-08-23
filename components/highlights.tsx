@@ -226,6 +226,11 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
           checkedKeys={checkedKeys}
           //@ts-ignore
           onCheck={onCheck}
+          onSelect={(text) => {
+            //@ts-ignore
+            navigator.clipboard.writeText(text);
+            toast.success("Copied to clipboard");
+          }}
         >
           <Tree.TreeNode
             title={examinedFileTitle}
@@ -238,6 +243,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                   title={`Page ${index + 1}`}
                   key={`Page ${index + 1}`}
                   className="text-slate-800 font-bold"
+                  selectable={false}
                 >
                   {page.map((highlight) => {
                     return (

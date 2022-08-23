@@ -54,7 +54,13 @@ const exportToReadwise = async (highlights: ReadwiseHighlight[]) => {
   );
 };
 
-export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
+export const Highlights = ({
+  highlights,
+  title,
+}: {
+  highlights: Highlight[][];
+  title?: string;
+}) => {
   const { examinedFileTitle } = useSnapshot(store);
   const [showReadwiseModal, setShowReadwiseModal] = useState(false);
   const [readwiseToken, setReadwiseToken] = useState<string | null>(null);
@@ -101,7 +107,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
       />
       <div className="w-full py-4 px-6 lg:p-10">
         <h1 className="text-center font-remarkable text-2xl">
-          {examinedFileTitle}
+          {examinedFileTitle || title}
         </h1>
         <div className="flex items-center w-full gap-x-10 mb-5 mt-5">
           {!readwiseToken ? (
@@ -133,7 +139,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                     }) => {
                       return {
                         text,
-                        title: examinedFileTitle,
+                        title: examinedFileTitle || title || "No title",
                         location,
                         location_type: "page",
                       };
@@ -163,7 +169,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                 ({ text, location }: { text: string; location: number }) => {
                   return [
                     text,
-                    examinedFileTitle,
+                    examinedFileTitle || title,
                     "",
                     "",
                     "",
@@ -208,10 +214,13 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
                 })
                 .filter((item: any) => item)
                 .join("\n\n");
-              const blob = new Blob([`# ${examinedFileTitle} \n${content}`], {
-                type: "text/plain;charset=utf-8",
-              });
-              saveAs(blob, `${examinedFileTitle}.md`);
+              const blob = new Blob(
+                [`# ${examinedFileTitle || title} \n${content}`],
+                {
+                  type: "text/plain;charset=utf-8",
+                }
+              );
+              saveAs(blob, `${examinedFileTitle || title}.md`);
             }}
             type="button"
             className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
@@ -234,7 +243,7 @@ export const Highlights = ({ highlights }: { highlights: Highlight[][] }) => {
           }}
         >
           <Tree.TreeNode
-            title={examinedFileTitle}
+            title={examinedFileTitle || title}
             key={"root"}
             className="text-slate-800 font-bold mt-10"
           >

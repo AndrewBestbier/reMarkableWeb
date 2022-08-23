@@ -50,6 +50,12 @@ Next run the Next application:
 npm run dev
 ```
 
+If you wish to run it with vercel so that the manual python function will work:
+
+```
+vercel dev
+```
+
 The application should then be running at http://localhost:3000/
 
 ## Contributing

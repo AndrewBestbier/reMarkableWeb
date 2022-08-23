@@ -63,7 +63,7 @@ class handler(BaseHTTPRequestHandler):
                         page_annotations.append(needle)
                     continue
 
-                if (path["items"][0][0] == "l"):
+                if (path["items"][0][0] == "l" and path["color"] == (1.0, 1.0, 1.0)):
                     rect = path["rect"]
                     image = page.get_pixmap(matrix=fitz.Identity, clip=rect, annots=False)
                     page_images.append(base64.b64encode(image.tobytes(output='png')).decode('utf_8'))

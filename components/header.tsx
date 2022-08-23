@@ -22,6 +22,12 @@ export const Header = () => {
       </div>
       <div className="justify-center items-center gap-x-10 hidden lg:flex">
         <a
+          href="https://remarkable-web.canny.io/feature-requests"
+          className="text-blue-500"
+        >
+          Feature requests
+        </a>
+        <a
           href="https://www.buymeacoffee.com/andrewbest"
           className="text-blue-500"
         >

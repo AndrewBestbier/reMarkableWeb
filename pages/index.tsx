@@ -7,13 +7,22 @@ import {
   AiOutlineFolder,
 } from "react-icons/ai";
 import { HiOutlineChevronRight, HiOutlineChevronDown } from "react-icons/hi";
-import { proxy, useSnapshot } from "valtio";
+import { useSnapshot } from "valtio";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import classNames from "classnames";
 import { RegisterDeviceModal } from "../components/register-modal";
 import Fuse from "fuse.js";
 import { Highlights } from "../components/highlights";
+import { Navigation } from "../components/navigation";
+import {
+  setExaminedFileHash,
+  setExaminedFileTitle,
+  setRefreshToken,
+  setSearchText,
+  setShowSideBar,
+  store,
+} from "../state/store";
 
 type File = {
   id: string;
@@ -21,45 +30,11 @@ type File = {
   type: "DocumentType" | "CollectionType";
   visibleName: string;
   lastModified: string;
-  fileType?: "pdf";
+  fileType?: "pdf" | "epub";
   parent?: string;
   pinned: boolean;
   lastOpened: string;
   childNodes: File[];
-};
-
-export const store = proxy<{
-  examinedFileHash: string;
-  showSideBar: boolean;
-  searchText: string;
-  refreshToken: string;
-  examinedFileTitle: string;
-}>({
-  examinedFileHash: "",
-  showSideBar: false,
-  searchText: "",
-  examinedFileTitle: "",
-  refreshToken: "",
-});
-
-const setExaminedFileHash = (fileHash: string) => {
-  store.examinedFileHash = fileHash;
-};
-
-const setSearchText = (searchText: string) => {
-  store.searchText = searchText;
-};
-
-const setShowSideBar = (value: boolean) => {
-  store.showSideBar = value;
-};
-
-const setExaminedFileTitle = (fileTitle: string) => {
-  store.examinedFileTitle = fileTitle;
-};
-
-const setRefreshToken = (refreshToken: string) => {
-  store.refreshToken = refreshToken;
 };
 
 const createDataTree = (dataset: File[]) => {
@@ -221,23 +196,26 @@ const Index = () => {
   const files = (filteredFiles || []).concat(missingUpdatesQuery?.data || []);
 
   return (
-    <>
-      <Header />
-      <RegisterDeviceModal
-        isOpen={!deviceToken}
-        setDeviceToken={(deviceToken: string) =>
-          registerDeviceToken(deviceToken)
-        }
-      />
-      <div className="flex flex-col lg:flex-row grow overflow-hidden">
-        <div className="flex lg:w-1/3">
-          <Sidebar files={files} />
-        </div>
-        <div className="flex grow overscroll-contain overflow-auto">
-          <FileView />
+    <div className="flex h-full w-full">
+      <Navigation />
+      <div className="h-full w-full flex flex-col">
+        <Header />
+        <RegisterDeviceModal
+          isOpen={!deviceToken}
+          setDeviceToken={(deviceToken: string) =>
+            registerDeviceToken(deviceToken)
+          }
+        />
+        <div className="flex flex-col lg:flex-row grow overflow-hidden grow">
+          <div className="flex lg:w-1/3">
+            <Sidebar files={files} />
+          </div>
+          <div className="flex grow overscroll-contain overflow-auto">
+            <FileView />
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -350,16 +328,32 @@ const File = ({ file }: { file: File }) => {
 };
 
 const Sidebar = ({ files }: { files: File[] }) => {
-  const { searchText, showSideBar } = useSnapshot(store);
+  const { searchText, showSideBar, filter } = useSnapshot(store);
 
-  const fuse = new Fuse(
-    files.filter((file) => file.type === "DocumentType"),
-    {
-      keys: ["visibleName"],
-      includeScore: true,
-      threshold: 0.4,
+  const filteredFiles = files.filter((file) => {
+    if (file.type !== "DocumentType") {
+      return false;
     }
-  );
+    if (filter === "none") {
+      return true;
+    }
+    if (filter === "favourites") {
+      return file.pinned;
+    }
+    if (filter === "pdf") {
+      return file.fileType === "pdf";
+    }
+
+    if (filter === "ebook") {
+      return file.fileType === "epub";
+    }
+  });
+
+  const fuse = new Fuse(filteredFiles, {
+    keys: ["visibleName"],
+    includeScore: true,
+    threshold: 0.4,
+  });
 
   const searchResults = fuse.search(searchText);
   const fileTree = createDataTree(files);
@@ -402,7 +396,7 @@ const Sidebar = ({ files }: { files: File[] }) => {
           }
         )}
       >
-        {!searchText
+        {!searchText && filter === "none"
           ? fileTree
               .sort(
                 (a, b) =>
@@ -410,9 +404,11 @@ const Sidebar = ({ files }: { files: File[] }) => {
                   a.visibleName.localeCompare(b.visibleName)
               )
               .map((file) => <File file={file} key={file.id} />)
-          : searchResults.map((result) => (
+          : searchResults.length
+          ? searchResults.map((result) => (
               <File file={result.item} key={result.item.id} />
-            ))}
+            ))
+          : filteredFiles.map((file) => <File file={file} key={file.id} />)}
       </div>
     </div>
   );

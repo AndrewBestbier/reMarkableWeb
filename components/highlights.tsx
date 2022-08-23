@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { Highlight, store } from "../pages";
+import { Highlight } from "../pages";
 import { useEffect, useState } from "react";
 import { Tree } from "antd";
 import "antd/dist/antd.css";
@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { ReadwiseModal } from "./readwise-modal";
 import { saveAs } from "file-saver";
 import axios from "axios";
+import { store } from "../state/store";
 
 function downloadBlob(content: any, filename: any, contentType: any) {
   const blob = new Blob([content], { type: contentType });

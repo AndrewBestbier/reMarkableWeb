@@ -9,13 +9,8 @@ export const Header = () => {
   }, []);
 
   return (
-    <header className="flex px-6 pt-5 pb-4 bg-white border-b border-gray-200 items-center justify-between">
+    <header className="hidden md:flex px-6 pt-5 pb-4 bg-white border-b border-gray-200 items-center justify-between">
       <div className="flex justify-center items-center gap-x-20 h-full">
-        <Link href="/">
-          <a className="font-remarkable text-slate-900 hover:text-slate-900 text-xl lg:text-3xl font-bold cursor-pointer">
-            reMarkable Web
-          </a>
-        </Link>
         <Link href="/manual">
           <a className="hover:text-blue-500 hidden sm:inline">Manual upload</a>
         </Link>

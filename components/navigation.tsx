@@ -3,6 +3,7 @@ import { AiFillStar, AiFillFilePdf, AiFillRead } from "react-icons/ai";
 import { useSnapshot } from "valtio";
 import { store, Filter, setFilter } from "../state/store";
 import classNames from "classnames";
+import { Tooltip } from "antd";
 
 const Link = ({ icon, filter }: { icon: React.ReactNode; filter: Filter }) => {
   const { filter: activeFilter } = useSnapshot(store);
@@ -30,10 +31,10 @@ export const Navigation = () => {
         <div className="font-remarkable text-3xl">rM</div>
       </div>
       <div className="flex flex-col gap-y-6">
-        <Link filter={"none"} icon={<BiLibrary />} />
-        <Link filter={"favourites"} icon={<AiFillStar />} />
-        <Link filter={"pdf"} icon={<AiFillFilePdf />} />
-        <Link filter={"ebook"} icon={<AiFillRead />} />
+        <Link filter={"none"} icon={<Tooltip title="All" placement="right"><BiLibrary /></Tooltip>} />
+        <Link filter={"favourites"} icon={<Tooltip title="Favourites" placement="right"><AiFillStar /></Tooltip>} />
+        <Link filter={"pdf"} icon={<Tooltip title="PDF's" placement="right"><AiFillFilePdf /></Tooltip>} />
+        <Link filter={"ebook"} icon={<Tooltip title="E-Books" placement="right"><AiFillRead /></Tooltip>} />
       </div>
     </div>
   );

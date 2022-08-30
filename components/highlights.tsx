@@ -64,9 +64,12 @@ export const Highlights = ({
   const { examinedFileTitle } = useSnapshot(store);
   const [showReadwiseModal, setShowReadwiseModal] = useState(false);
   const [readwiseToken, setReadwiseToken] = useState<string | null>(null);
+  const [treeHighlights, setTreeHighlights] = useState(highlights);
 
   const [checkedKeys, setCheckedKeys] = useState([]);
-  const [checkedHighlights, setCheckedHighlights] = useState([]);
+  const [checkedHighlights, setCheckedHighlights] = useState<
+    { text: string; location: number }[]
+  >([]);
 
   const onCheck = (checkedKeysValue: string[], e: any) => {
     const checkedData = e.checkedNodes
@@ -110,6 +113,47 @@ export const Highlights = ({
           {examinedFileTitle || title}
         </h1>
         <div className="flex items-center w-full gap-x-10 mb-5 mt-5">
+          <button
+            onClick={() => {
+              const location = checkedHighlights.reduce((acc, highlight) => {
+                if (highlight.location <= acc) {
+                  return highlight.location;
+                }
+                return acc;
+              }, Infinity);
+
+              const newHighlight = checkedHighlights
+                .map(({ text }) => text)
+                .join(" ");
+              setTreeHighlights((treeHighlights) =>
+                Object.assign([], treeHighlights, {
+                  [location - 1]: [
+                    { text: newHighlight, color: 100 },
+                    ...treeHighlights[location - 1],
+                  ],
+                })
+              );
+              setCheckedHighlights([]);
+              setCheckedKeys([]);
+              toast.success(
+                "A new merged highlight has been created. If you refresh your browser these will be lost"
+              );
+            }}
+            disabled={!checkedHighlights.length}
+            type="button"
+            className={classNames(
+              "inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500",
+              {
+                "bg-slate-400 cursor-not-allowed": !checkedHighlights.length,
+              },
+              {
+                "bg-slate-600 hover:bg-slate-700 cursor-pointer":
+                  !!checkedHighlights.length,
+              }
+            )}
+          >
+            Combine selected highlights
+          </button>
           {!readwiseToken ? (
             <button
               onClick={() => {
@@ -203,7 +247,7 @@ export const Highlights = ({
           </button>
           <button
             onClick={() => {
-              const content = highlights
+              const content = treeHighlights
                 .map((page: any, index: number) => {
                   if (!page.length) {
                     return null;
@@ -247,7 +291,7 @@ export const Highlights = ({
             key={"root"}
             className="text-slate-800 font-bold mt-10"
           >
-            {highlights.map((page, index) => {
+            {treeHighlights.map((page, index) => {
               return page.length ? (
                 <Tree.TreeNode
                   title={`Page ${index + 1}`}
@@ -267,10 +311,13 @@ export const Highlights = ({
                           <div>
                             <div
                               className={classNames("rounded", {
+                                "bg-black": highlight.color === 0,
                                 "bg-yellow-500": highlight.color === 3,
                                 "bg-green-500": highlight.color === 4,
                                 "bg-fuchsia-500": highlight.color === 5,
                                 "bg-gray-600": highlight.color === 8,
+                                "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500":
+                                  highlight.color === 100,
                               })}
                               style={{
                                 width: 24,
